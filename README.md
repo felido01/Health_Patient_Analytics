@@ -7,8 +7,8 @@ In this project, I analyzed hospital patient data to uncover patterns in medical
 
 - Identify trends in patient age, gender, and medical conditions.
 - Determine the most common medical conditions by age group.
+- Provide the list and count of hospitals with more than one patients
 - Analyze average billing amounts by medical condition and insurance provider.
-- Identify factors contributing to high medical costs.
 - Evaluate average length of stay based on medical condition and admission type.
 - Compare test results with discharge dates to analyze recovery times.
 
@@ -34,9 +34,10 @@ The dataset used in this project contains healthcare-related data including pati
 
 For more details, you can access the dataset on [Kaggle](https://www.kaggle.com/datasets/prasad22/healthcare-dataset).
 
-### Data Preparation: Creating the Patients Table
 
-The SQL query provided is used to create a `patients` table, which stores various details about hospital patients. The table is structured with the following columns:
+## Data Preparation: Creating the Patients Table
+
+The SQL query below is used to create a patients table, which stores various details about hospital patients. It was written with respect to its appropriate datatype.
 
 ```sql
 CREATE TABLE patients (
@@ -58,8 +59,8 @@ CREATE TABLE patients (
 );
 ```
 
-
-#### Data Cleaning Process
+---
+## Data Cleaning Process
 
 To ensure the dataset is accurate, consistent, and free from duplicates, we followed a series of steps in the data cleaning process:
 
@@ -87,10 +88,13 @@ FROM patients;
 UPDATE patients
 SET name = INITCAP(name);
 ```
+The code removes duplicates from the patients table by creating a new table with only distinct records. It then deletes the original table to prevent redundancy and renames the cleaned table to the original name. After that, it retrieves the cleaned data to ensure everything is correct. Lastly, it updates patient names to title case, making sure all names are consistently formatted with the first letter capitalized.
 
-### Data Analysis:
 
-#### **Age Group Distribution**
+---
+## Data Analysis:
+
+1. ### **Age Group Distribution**
 
 The SQL query below categorizes patients into four age groups and counts the number of patients in each group:
 
@@ -108,8 +112,9 @@ FROM patients
 GROUP BY Age_Group
 ORDER BY count DESC;
 ```
+I grouped the patients into four distinct age categories: "Old" (60-89 years), "Mid-Aged Adults" (36-59 years), "Young Adults" (19-35 years), and "Teens" (13-18 years). This classification helps to analyze the healthcare needs and trends across different life stages, with the majority of patients being in the "Old" category, followed by "Mid-Aged Adults." The "Young Adults" and "Teens" categories have fewer patients, suggesting that younger populations generally have fewer medical issues, but still require care for specific conditions.
 
-#### **Trend in Patient's Gender**
+2. ### **Trend in Patient's Gender**
 
 The following SQL query is designed to analyze the gender distribution within the patient population, providing critical insights into how male and female patients are represented in the dataset:
 
@@ -121,8 +126,9 @@ FROM patients
 GROUP BY gender 
 ORDER BY gender DESC;
 ```
+From my analysis the ratio of Male to Female has a minimal deviation, It is gotten to be 27496:27470 respectively
 
-#### **Trend in Medical Condition**
+3. ### **Trend in Medical Condition**
 
 The following SQL query analyzes the distribution of **medical conditions** across patients, providing valuable insights into the prevalence of different health issues in the patient population:
 
@@ -133,3 +139,146 @@ SELECT medical_condition,
 FROM patients
 GROUP BY medical_condition 
 ORDER BY medical_condition DESC;
+```
+There are 6 medical Conditions involved, they include "Obesity", "Hypertension", "Diabetes", "Cancer", "Asthma", "Arthritis" with Arthritis having the highest count 
+
+4. ### ** The most common medical conditions by age group.**
+The SQL query below is used to identify the most common medical conditions among different age groups of patients. It classifies patients into age groups (Teens, Young Adults, Mid-Aged Adults, and Old), then counts how many patients in each group have each medical condition. The result is sorted so that the most common conditions appear first, helping to understand which medical conditions are more prevalent in specific age groups.
+```sql
+SELECT medical_condition,
+    CASE
+        WHEN age BETWEEN 13 AND 18 THEN 'Teens'
+        WHEN age BETWEEN 19 AND 35 THEN 'Young_Adults'
+        WHEN age BETWEEN 36 AND 59 THEN 'Mid_Aged_Adults'
+        WHEN age BETWEEN 60 AND 89 THEN 'Old'
+    END AS Age_Group,
+    COUNT(*)
+FROM patients
+GROUP BY medical_condition, Age_Group
+ORDER BY count DESC;
+```
+#### From this query I uncovered:
+- **Old**: The most common condition is **Diabetes** with 3,528 patients.
+- **Mid-Aged Adults**: The most common condition is **Diabetes** with 3,329 patients.
+- **Young Adults**: The most common condition is **Cancer** with 2,271 patients.
+- **Teens**: The most common condition is **Obesity** with 158 patients.
+
+5. ### **List and Count of Hospitals with More Than One Patient**
+
+This SQL query helps to find out which hospitals have more than one patient:
+```sql
+WITH hospital_count AS (
+    SELECT HOSPITAL, count(*) AS counts
+    FROM patients
+    GROUP BY hospital
+)
+SELECT *
+FROM hospital_count
+WHERE counts > 1;
+
+-- Count
+WITH hospital_count AS (
+    SELECT HOSPITAL, count(*) AS counts
+    FROM patients
+    GROUP BY hospital
+)
+SELECT COUNT(*)
+FROM hospital_count
+WHERE counts > 1;
+```
+It is divided into two main parts which are the List and Count Query. CTE(Common Table Expression) was utilized for both query
+
+ **List of Hospitals**:
+   - The query groups the patients by hospital and counts how many patients are assigned to each one.
+   - It then filters out hospitals with only one patient, showing a list of hospitals that have more than one patient.
+
+ **Count of Hospitals**:
+   - After identifying hospitals with more than one patient, the second query counts how many hospitals meet this criteria.
+   - This gives the total number of hospitals that have more than one patient.
+     
+6. ### Average Billing Amounts by Medical Condition and Insurance Provider
+
+This query calculates the average billing amounts for each medical condition and insurance provider. It groups the data by both `medical_condition` and `insurance_provider`, allowing the query to compute the average billing amount for each combination. 
+
+```sql
+SELECT medical_condition, insurance_provider,
+    ROUND(AVG(billing_amount), 0)
+FROM patients
+GROUP BY medical_condition, insurance_provider;
+```
+The `AVG(billing_amount)` function calculates the average of the billing amounts for each group. To ensure the results are easier to read, the `ROUND()` function rounds the average to zero decimal places.
+The result of my analysis in summary reveals that Obesity has the highest average billing amounts, particularly with Cigna and Blue Cross. Hypertension, Asthma, and Diabetes also show significant costs across various insurance providers.
+
+7. ### Evaluation of Average Length of Stay Based on Medical Condition and Admission Type
+
+First, I calculated the **days of stay** for each patient by subtracting the **Date of Admission** from the **Discharge Date**. This difference was then added as a new column (`days_of_stay`) to the patients table.
+
+Next, I grouped the patients into different categories based on the number of days they stayed in the hospital. These categories include ranges such as **1-5 days**, **6-10 days**, and so on. This grouping provides a clearer picture of the patients hospital stay durations.
+
+Lastly,I analyzed the **length of stay** according to their **medical condition** and **admission type**. I calculated the **average length of stay** and **standard deviation** of days for each group, offering valuable insights into how the length of stay can differ based on these factors.
+The code is as follows:
+```sql
+SELECT medical_condition, admission_type,
+    CASE 
+        WHEN days_of_stay BETWEEN 1 AND 5 THEN '1-5'
+        WHEN days_of_stay BETWEEN 6 AND 10 THEN '6-10'
+        WHEN days_of_stay BETWEEN 11 AND 15 THEN '11-15'
+        WHEN days_of_stay BETWEEN 16 AND 20 THEN '16-20'
+        WHEN days_of_stay BETWEEN 21 AND 25 THEN '21-25'
+        WHEN days_of_stay BETWEEN 26 AND 30 THEN '26-30'
+    END AS group_of_stay,
+    COUNT(*) AS patients_count,
+    ROUND(STDDEV(days_of_stay),0) AS std,
+    ROUND(AVG(days_of_stay),0) AS avg_days
+FROM patients
+GROUP BY medical_condition, admission_type, group_of_stay;
+```
+8.### Comparing Test Results with Discharge Dates to Analyze Recovery Times
+
+This SQL query analyzes the relationship between patients' **test results** and their **length of stay**. It categorizes patients based on their test results (Normal, Abnormal, or Inconclusive) and groups them into different categories based on how long they stayed in the hospital (1-5 days, 6-10 days, and so on). The query then counts how many patients fall into each group for each test result type. 
+
+```sql
+SELECT test_results,
+    CASE 
+        WHEN days_of_stay BETWEEN 1 AND 5 THEN '1-5'
+        WHEN days_of_stay BETWEEN 6 AND 10 THEN '6-10'
+        WHEN days_of_stay BETWEEN 11 AND 15 THEN '11-15'
+        WHEN days_of_stay BETWEEN 16 AND 20 THEN '16-20'
+        WHEN days_of_stay BETWEEN 21 AND 25 THEN '21-25'
+        WHEN days_of_stay BETWEEN 26 AND 30 THEN '26-30'
+    END AS group_of_stay,
+    COUNT(*)
+FROM patients
+WHERE test_results = 'Normal'
+GROUP BY test_results, group_of_stay;
+
+SELECT test_results,
+    CASE 
+        WHEN days_of_stay BETWEEN 1 AND 5 THEN '1-5'
+        WHEN days_of_stay BETWEEN 6 AND 10 THEN '6-10'
+        WHEN days_of_stay BETWEEN 11 AND 15 THEN '11-15'
+        WHEN days_of_stay BETWEEN 16 AND 20 THEN '16-20'
+        WHEN days_of_stay BETWEEN 21 AND 25 THEN '21-25'
+        WHEN days_of_stay BETWEEN 26 AND 30 THEN '26-30'
+    END AS group_of_stay,
+    COUNT(*)
+FROM patients
+WHERE test_results = 'Abnormal'
+GROUP BY test_results, group_of_stay;
+
+SELECT test_results,
+    CASE 
+        WHEN days_of_stay BETWEEN 1 AND 5 THEN '1-5'
+        WHEN days_of_stay BETWEEN 6 AND 10 THEN '6-10'
+        WHEN days_of_stay BETWEEN 11 AND 15 THEN '11-15'
+        WHEN days_of_stay BETWEEN 16 AND 20 THEN '16-20'
+        WHEN days_of_stay BETWEEN 21 AND 25 THEN '21-25'
+        WHEN days_of_stay BETWEEN 26 AND 30 THEN '26-30'
+    END AS group_of_stay,
+    COUNT(*)
+FROM patients
+WHERE test_results = 'Inconclusive'
+GROUP BY test_results, group_of_stay;
+```
+The analysis helps to understand if there is a pattern in the length of stay based on the test results, which can give insights into recovery times for patients with different diagnoses.
+
