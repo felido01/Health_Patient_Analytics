@@ -7,7 +7,7 @@ This project contains SQL queries for analyzing healthcare data. The queries pro
 If you're not familiar with SQL but want to see the output of these queries, follow these steps to run them on your system.
 
 ### Step 1: Download the SQL File
-Click [here](https://github.com/your-repo/healthcare_analytics.sql) to download the `healthcare_analytics.sql` file from GitHub.
+Click [here]([https://github.com/your-repo/healthcare_analytics.sql](https://github.com/felido01/Health_Patient_Analytics/blob/92bacff4d8137e44fafaceac432bcb4cd818643c/README.md)) to download the `healthcare_analytics.sql` file from GitHub.
 
 ### Step 2: Choose a Database Management System (DBMS)
 You need a database system to run SQL queries. Here are some options:
