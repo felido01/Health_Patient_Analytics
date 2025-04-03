@@ -96,7 +96,7 @@ The code removes duplicates from the patients table by creating a new table with
 
 
 ---
-## Data Analysis:
+## Data Analysis: [Click here to view the SQL file](./healthcare_analytics.sql)
 
 1. ### **Age Group Distribution**
 
